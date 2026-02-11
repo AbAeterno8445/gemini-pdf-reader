@@ -52,9 +52,22 @@ async def ExtractPDFRoute(fileUpload: UploadFile):
     if (fileUpload.size > 1048576):
         raise HTTPException(status_code=413, detail="File is too large, maximum size is 1MB.")
 
-    prompt = ("Read the given PDF document, and extract its items' fields into the appropriate schema. "
-              "Use the 'notes' field to append any outstanding status about this inventory, in a few words. "
-              "If this does not look like an inventory PDF, simply return no items at all and use the notes field to provide a relevant error message.")
+    #prompt = ("Read the given PDF document, and extract its items' fields into the appropriate schema. "
+    #          "Use the 'notes' field to append any outstanding status about this inventory, in a few words. "
+    #          "If this does not look like an inventory PDF, simply return no items at all and use the notes field to provide a relevant error message.")
+
+    fields = InventoryItem.model_fields
+    fieldLines = [
+        f"- {name}: {field.description or ''}"
+        for name, field in fields.items()
+    ]
+    fieldsStr = "\n".join(fieldLines)
+    prompt = (
+        "Read the given PDF document. For each inventory item, extract the following fields:\n"
+        f"{fieldsStr}\n"
+        "Return the results in the provided JSON schema. If the PDF is not an inventory, return an empty items list and explain why in the notes field."
+    )
+
     aiResponse = aiClient.models.generate_content(
         model="gemini-3-flash-preview",
         contents=[
