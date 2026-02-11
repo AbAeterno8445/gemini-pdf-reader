@@ -1,10 +1,10 @@
 from google import genai
 from google.genai import types
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List
-import os
-import pathlib
+import os, pathlib, asyncio, numpy
 
 # Pydantic schema definitions
 class InventoryItem(BaseModel):
@@ -23,22 +23,43 @@ class InventoryOutput(BaseModel):
 # FastAPI app
 app = FastAPI()
 
+# CORS middleware for local testing
+corsOrigins = [
+    "http://localhost:5173"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=corsOrigins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
 # Google genai client
 aiClient = genai.Client(api_key=os.getenv('GEMINI_TEST_API_KEY'))
 
 # PDF file
-pdfPath = pathlib.Path("input/Warehouse Banana Test.pdf")
+pdfPath = pathlib.Path("input/Warehouse Inventory Test 1.pdf")
 
-@app.get("/")
-async def root():
+@app.post("/extractPDF/")
+async def ExtractPDFRoute(fileUpload: UploadFile):
+    print("Received file:", fileUpload)
+    fileData = await fileUpload.read()
+
+    if (fileUpload.content_type != "application/pdf"):
+        raise HTTPException(status_code=415, detail="File provided is not a PDF.")
+
+    if (fileUpload.size > 1048576):
+        raise HTTPException(status_code=413, detail="File is too large, maximum size is 1MB.")
+
     prompt = ("Read the given PDF document, and extract its items' fields into the appropriate schema. "
-              "The inventory date corresponds to the date at the top of the document. "
-              "Use the 'notes' field to append any outstanding status about this inventory, in a few words.")
+              "Use the 'notes' field to append any outstanding status about this inventory, in a few words. "
+              "If this does not look like an inventory PDF, simply return no items at all and use the notes field to provide a relevant error message.")
     aiResponse = aiClient.models.generate_content(
         model="gemini-3-flash-preview",
         contents=[
             types.Part.from_bytes(
-                data=pdfPath.read_bytes(),
+                data=fileData,
                 mime_type='application/pdf'
             ),
             prompt
@@ -51,26 +72,12 @@ async def root():
     newInventory = InventoryOutput.model_validate_json(aiResponse.text)
     return newInventory
 
-@app.get("/generateDoc")
-async def generateDocRoute():
-    prompt = "Given this PDF document, generate a list of items of a similar nature (fruits, vegetables), making up new quantities and manufacturers, and the approriate stock status (which can only be one of the three present). Date can be anything before 2026."
-    aiResponse = aiClient.models.generate_content(
-        model="gemini-3-flash-preview",
-        contents=[
-            types.Part.from_bytes(
-                data=pdfPath.read_bytes(),
-                mime_type='application/pdf'
-            ),
-            prompt
-        ],
-        config={
-            "response_mime_type": "application/json",
-            "response_json_schema": InventoryOutput.model_json_schema()
-        }
-    )
-    newList = InventoryOutput.model_validate_json(aiResponse.text)
-    return newList
+@app.post("/test")
+async def TestRoute():
+    # This test case will return some data after a delay of 2 seconds
+    await asyncio.sleep(2)
 
-@app.get("/test")
-async def testRoute():
+    rand = numpy.random.randint(1, 100)
+    if (rand <= 50):
+        raise HTTPException(status_code=500, detail="The server has rejected this item.")
     return {"message": "Test route operational."}

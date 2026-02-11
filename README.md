@@ -1,8 +1,10 @@
 # Python PDF Processor via Gemini API
 
-Small experimental application that leverages Google Gemini's API services to process fictional "Fruit Warehouse Inventory" PDF files, outputting their information into JSON files.
+Small experimental application that leverages Google Gemini's API services to process fictional "Warehouse Inventory" PDF files, outputting their information into JSON files.
 
 Utilizes Python + FastAPI to provide end-points that interact with the API.
+
+Run the **fastapi dev main.py** command to start.
 
 ## Current endpoints
 
