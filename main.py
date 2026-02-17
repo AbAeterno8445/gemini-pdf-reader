@@ -88,3 +88,7 @@ async def ExtractPDFRoute(fileUpload: UploadFile):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Invalid response from server: {str(e)[:200]}")
     return newInventory
+
+@app.get("/testFail")
+def failTestRoute():
+    raise HTTPException(status_code=500, detail="API failure test route operational.")
