@@ -8,16 +8,16 @@ import os, pathlib
 
 # Pydantic schema definitions
 class InventoryItem(BaseModel):
-    ID: str = Field(description="Numeric ID of the item, in 3 digits.")
+    ID: str = Field(description="Numeric ID of the item, in 3 digits. Cannot be negative.")
     name: str = Field(description="Name of the item.")
     category: str = Field(description="Category group of the item.")
-    quantity: int = Field(description="Remaining amount of this item as per the inventory.")
+    quantity: int = Field(description="Remaining amount of this item as per the inventory. Cannot be negative.")
     manufacturer: str = Field(description="Company that manufactured the item.")
     status: str = Field(description="Stock status for the item.")
 
 class InventoryOutput(BaseModel):
     date: str = Field(description="The date the inventory was made in.")
-    notes: str = Field(description="Additional notes about this inventory, if necessary.")
+    notes: str = Field(description="Additional notes about this inventory and its overall status, if necessary.")
     items: List[InventoryItem]
 
 # FastAPI app
