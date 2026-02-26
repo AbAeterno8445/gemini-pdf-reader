@@ -8,5 +8,5 @@ Run the **fastapi dev main.py** command to start.
 
 ## Current endpoints
 
-- **"/extractPDF"** (POST) - Processes the original warehouse inventory PDF file and returns a JSON with the appropriate data from the file. Receives the PDF file in a **fileUpload** field.
+- **/extractPDF** (POST) - Processes the original warehouse inventory PDF file and returns a JSON with the appropriate data from the file. Receives the PDF file in a **fileUpload** field.
 - **/getPrompt** (GET) - Returns the prompt that is sent to the Gemini API.

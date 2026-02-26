@@ -40,6 +40,7 @@ app.add_middleware(
 aiClient = genai.Client(api_key=os.getenv('GEMINI_TEST_API_KEY'))
 
 def GetPrompt():
+    # OLD PROMPT
     #prompt = ("Read the given PDF document, and extract its items' fields into the appropriate schema. "
     #          "Use the 'notes' field to append any outstanding status about this inventory, in a few words. "
     #          "If this does not look like an inventory PDF, simply return no items at all and use the notes field to provide a relevant error message.")
@@ -69,9 +70,11 @@ async def ExtractPDFRoute(fileUpload: UploadFile):
     fileData = await fileUpload.read()
 
     if (fileUpload.content_type != "application/pdf"):
+        # 415 - Unsupported media type
         raise HTTPException(status_code=415, detail="File provided is not a PDF.")
 
     if (fileUpload.size > 1048576):
+        # 413 - Content too large
         raise HTTPException(status_code=413, detail="File is too large, maximum size is 1MB.")
 
     prompt = GetPrompt()
